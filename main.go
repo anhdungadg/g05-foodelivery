@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 // Restaurant ` vs ' khac nhau the nao vay??
@@ -43,7 +44,9 @@ func main() {
 
 	// POST /restaurants
 	v1 := r.Group("/v1")
-	v1.POST("/restaurants", func(c *gin.Context) {
+	restaurants := v1.Group("/restaurants")
+
+	restaurants.POST("", func(c *gin.Context) {
 		var data Restaurant
 		if err := c.ShouldBind(&data); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -52,6 +55,24 @@ func main() {
 		}
 
 		db.Create(&data)
+
+		c.JSON(200, gin.H{
+			"data": data,
+		})
+	})
+
+	restaurants.GET("/:id", func(c *gin.Context) {
+		id, err := strconv.Atoi(c.Param("id"))
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+		}
+
+		var data Restaurant
+
+		db.Where("id=?", id).First(&data)
 
 		c.JSON(200, gin.H{
 			"data": data,
